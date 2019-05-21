@@ -50,3 +50,20 @@
   1.使用http://物理机ip:15672 进行访问了，默认账号密码是guest/guest
   2.默认的数据库不能连接，使用guest不能用代码连接
   3.创建数据库/test,创建用户test,代码连接端口5672
+
+5.HA模式集群 
+  随便进入一台机执行：
+rabbitmqctl set_policy -p /test(数据库名字)  testdb(policy名称) '^(?!amq\.).*' '{"ha-mode": "all"}'
+rabbitmqctl set_policy [-p Vhost] Name Pattern Definition [Priority]
+ 
+-p Vhost： 可选参数，针对指定vhost下的queue进行设置
+Name: policy的名称
+Pattern: queue的匹配模式(正则表达式)
+Definition：镜像定义，包括三个部分ha-mode, ha-params, ha-sync-mode
+    ha-mode:指明镜像队列的模式，有效值为 all/exactly/nodes
+        all：表示在集群中所有的节点上进行镜像
+        exactly：表示在指定个数的节点上进行镜像，节点的个数由ha-params指定
+        nodes：表示在指定的节点上进行镜像，节点名称通过ha-params指定
+    ha-params：ha-mode模式需要用到的参数
+    ha-sync-mode：进行队列中消息的同步方式，有效值为automatic和manual
+
