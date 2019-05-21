@@ -1,0 +1,52 @@
+1.docker run -d --hostname localhost --name myrabbit -p 15672:15672 -p 5672:5672 rabbitmq:3.6.15-management
+	 参数说明：
+
+	-d 后台进程运行
+	hostname RabbitMQ主机名称
+	name 容器名称
+	-p port:port 本地端口:容器端口
+	-p 15672:15672 http访问端口
+	-p 5672:5672 amqp访问端口
+	使用：http://宿主ip:15672 访问，用户名密码使用默认：guest/guest.
+
+2.启动多个RabbitMQ
+
+	docker run -d --hostname rabbit1 --name myrabbit1 -p 15672:15672 -p 5672:5672 -e RABBITMQ_ERLANG_COOKIE='rabbitcookie' rabbitmq:3.6.15-management
+
+	docker run -d --hostname rabbit2 --name myrabbit2 -p 5673:5672 --link myrabbit1:rabbit1 -e RABBITMQ_ERLANG_COOKIE='rabbitcookie' rabbitmq:3.6.15-management
+
+	docker run -d --hostname rabbit3 --name myrabbit3 -p 5674:5672 --link myrabbit1:rabbit1 --link myrabbit2:rabbit2 -e RABBITMQ_ERLANG_COOKIE='rabbitcookie' rabbitmq:3.6.15-management
+
+	这样我们就可以使用，http://宿主ip:15672 和 http://宿主ip:15673 进行访问了，默认账号密码依旧是guest/guest.
+
+3.制作集群
+	设置节点1：
+
+	docker exec -it myrabbit1 bash
+	rabbitmqctl stop_app
+	rabbitmqctl reset
+	rabbitmqctl start_app
+	exit
+
+	设置节点2,加入到集群：
+    参数“--ram”表示设置为内存节点，忽略次参数默认为磁盘节点。
+	docker exec -it myrabbit2 bash
+	rabbitmqctl stop_app
+	rabbitmqctl reset
+	rabbitmqctl join_cluster --ram rabbit@rabbit1
+	rabbitmqctl start_app
+	exit
+
+	设置节点3，加入到集群：
+
+	docker exec -it myrabbit3 bash
+	rabbitmqctl stop_app
+	rabbitmqctl reset
+	rabbitmqctl join_cluster --ram rabbit@rabbit1
+	rabbitmqctl start_app
+	exit
+	
+4.注意事项:
+  1.使用http://物理机ip:15672 进行访问了，默认账号密码是guest/guest
+  2.默认的数据库不能连接，使用guest不能用代码连接
+  3.创建数据库/test,创建用户test,代码连接端口5672
